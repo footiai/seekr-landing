@@ -1,7 +1,5 @@
 'use client';
 
-import Image from 'next/image';
-
 export default function HeroSection() {
   return (
     <div className="relative bg-black min-h-screen flex items-center">
@@ -23,7 +21,7 @@ export default function HeroSection() {
           {/* Hero Content */}
           <div className="text-center lg:text-left">
             <h1 className="text-5xl md:text-7xl font-bold text-white mb-8 tracking-tight">
-              Find what you're <span className="text-gray-300">looking for</span>
+              Find what you&apos;re <span className="text-gray-300">looking for</span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-300 mb-12 leading-relaxed">
               The most powerful search API for developers. Integrate quickly and deliver precise 
