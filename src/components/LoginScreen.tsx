@@ -4,11 +4,12 @@ import { useState } from 'react';
 import Image from 'next/image';
 
 interface LoginScreenProps {
-  onClose: () => void;
-  onShowRegister: () => void;
+  onClose?: () => void;
+  onShowRegister?: () => void;
+  onLogin?: () => void;
 }
 
-export default function LoginScreen({ onClose, onShowRegister }: LoginScreenProps) {
+export default function LoginScreen({ onClose, onShowRegister, onLogin }: LoginScreenProps) {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -17,7 +18,6 @@ export default function LoginScreen({ onClose, onShowRegister }: LoginScreenProp
   
   const [focusedField, setFocusedField] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -27,12 +27,8 @@ export default function LoginScreen({ onClose, onShowRegister }: LoginScreenProp
     }));
   };
 
-  const handleLogin = async () => {
-    setIsLoading(true);
-    // Simular login
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsLoading(false);
-    alert('Login realizado com sucesso!');
+  const handleLogin = () => {
+    onLogin?.();
   };
 
   return (
@@ -50,7 +46,7 @@ export default function LoginScreen({ onClose, onShowRegister }: LoginScreenProp
       <div className="absolute inset-0">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/3 rounded-full blur-3xl opacity-40"></div>
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-white/2 rounded-full blur-3xl opacity-30"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-radial from-white/5 to-transparent rounded-full blur-3xl opacity-20"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-white/5 to-transparent rounded-full blur-3xl opacity-20"></div>
       </div>
       
       {/* Grid pattern overlay */}
@@ -61,7 +57,12 @@ export default function LoginScreen({ onClose, onShowRegister }: LoginScreenProp
         {[...Array(120)].map((_, i) => {
           // Distribuição realista de tipos de estrelas
           const random = Math.random();
-          let starType;
+          let starType: {
+            size: string;
+            brightness: string;
+            opacity: string;
+            glow: string;
+          };
           
           if (random > 0.95) {
             // 5% - Estrelas muito brilhantes (principais)
@@ -104,7 +105,11 @@ export default function LoginScreen({ onClose, onShowRegister }: LoginScreenProp
               style={{
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
-                animation: `twinkle ${1.5 + Math.random() * 5}s ease-in-out ${Math.random() * 4}s infinite alternate`,
+                animationDuration: `${1.5 + Math.random() * 5}s`,
+                animationDelay: `${Math.random() * 4}s`,
+                animationName: 'pulse',
+                animationIterationCount: 'infinite',
+                animationDirection: 'alternate',
                 transform: `translate(${Math.random() * 15 - 7.5}px, ${Math.random() * 15 - 7.5}px)`
               }}
             />
@@ -119,7 +124,11 @@ export default function LoginScreen({ onClose, onShowRegister }: LoginScreenProp
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              animation: `brightstartTwinkle ${3 + Math.random() * 3}s ease-in-out ${Math.random() * 2}s infinite alternate`,
+              animationDuration: `${3 + Math.random() * 3}s`,
+              animationDelay: `${Math.random() * 2}s`,
+              animationName: 'pulse',
+              animationIterationCount: 'infinite',
+              animationDirection: 'alternate',
             }}
           />
         ))}
@@ -132,46 +141,16 @@ export default function LoginScreen({ onClose, onShowRegister }: LoginScreenProp
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              animation: `shootingStar ${8 + Math.random() * 4}s linear ${i * 6 + Math.random() * 3}s infinite`
+              animationDuration: `${8 + Math.random() * 4}s`,
+              animationDelay: `${i * 6 + Math.random() * 3}s`,
+              animationName: 'bounce',
+              animationIterationCount: 'infinite'
             }}
           />
         ))}
       </div>
 
-      {/* CSS personalizado para animações das estrelas */}
-      <style jsx>{`
-        @keyframes twinkle {
-          0% { opacity: 0.1; transform: scale(0.8); }
-          50% { opacity: 0.6; transform: scale(1.2); }
-          100% { opacity: 0.2; transform: scale(0.9); }
-        }
-        
-        @keyframes brightstartTwinkle {
-          0% { opacity: 0.4; transform: scale(0.9); }
-          25% { opacity: 0.9; transform: scale(1.3); }
-          75% { opacity: 0.8; transform: scale(1.1); }
-          100% { opacity: 0.5; transform: scale(1.0); }
-        }
-        
-        @keyframes shootingStar {
-          0% { 
-            opacity: 0; 
-            transform: translateX(-100px) translateY(-100px) scale(0);
-          }
-          10% { 
-            opacity: 1; 
-            transform: translateX(-50px) translateY(-50px) scale(1);
-          }
-          90% { 
-            opacity: 1; 
-            transform: translateX(150px) translateY(150px) scale(1);
-          }
-          100% { 
-            opacity: 0; 
-            transform: translateX(200px) translateY(200px) scale(0);
-          }
-        }
-      `}</style>
+
 
       <div className="max-w-md w-full relative z-10">
         {/* Header */}
@@ -304,23 +283,13 @@ export default function LoginScreen({ onClose, onShowRegister }: LoginScreenProp
             <button 
               type="button"
               onClick={handleLogin}
-              disabled={!formData.email || !formData.password || isLoading}
               className="relative w-full bg-gradient-to-r from-white/20 via-white/10 to-transparent backdrop-blur-sm text-white py-4 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-0.5 hover:scale-[1.02] border border-white/30 hover:border-white/50 overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:scale-100"
             >
               <span className="relative z-10 flex items-center justify-center gap-3">
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Signing in...
-                  </>
-                ) : (
-                  <>
-                    Sign In
-                    <svg className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </>
-                )}
+                Sign In
+                <svg className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
               <div className="absolute -inset-1 bg-gradient-to-r from-white/20 to-transparent rounded-xl blur opacity-0 group-hover:opacity-50 transition-all duration-500"></div>
