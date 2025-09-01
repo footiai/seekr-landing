@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface RegisterScreenProps {
   onClose: () => void;
@@ -74,9 +75,11 @@ export default function RegisterScreen({ onClose, onShowLogin }: RegisterScreenP
       <div className="max-w-md w-full relative z-10">
         <div className="text-center mb-8">
           <div className="h-16 mb-6 flex items-center justify-center">
-            <img
+            <Image
               src="/logo.png"
               alt="Seekr Logo"
+              width={120}
+              height={48}
               className="h-12 w-auto"
             />
           </div>

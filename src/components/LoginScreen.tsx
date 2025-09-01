@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface LoginScreenProps {
   onClose: () => void;
@@ -176,9 +177,11 @@ export default function LoginScreen({ onClose, onShowRegister }: LoginScreenProp
         {/* Header */}
         <div className="text-center mb-8">
           <div className="h-16 mb-6 flex items-center justify-center">
-            <img
+            <Image
               src="/logo.png"
               alt="Seekr Logo"
+              width={120}
+              height={48}
               className="h-12 w-auto"
             />
           </div>
@@ -354,7 +357,7 @@ export default function LoginScreen({ onClose, onShowRegister }: LoginScreenProp
           {/* Register Link */}
           <div className="text-center mt-6 pt-6 border-t border-white/10">
             <p className="text-gray-400">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <button type="button" onClick={onShowRegister} className="text-white hover:text-gray-300 font-semibold transition-colors underline underline-offset-2">
                 Create Account
               </button>
