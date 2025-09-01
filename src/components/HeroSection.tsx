@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 export default function HeroSection() {
   return (
     <div className="relative bg-black min-h-screen flex items-center">
@@ -55,16 +57,14 @@ export default function HeroSection() {
           </div>
 
           {/* Hero Image */}
-          <div className="w-full max-w-lg mx-auto lg:mx-0">
-            <div className="w-full h-96 bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl border-2 border-gray-800 flex items-center justify-center shadow-2xl">
-              <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 bg-gray-800 rounded-full flex items-center justify-center">
-                  <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <span className="text-gray-500">Hero Image</span>
-              </div>
+          <div className="w-full max-w-lg mx-auto lg:mx-0 -mt-16">
+            <div className="relative w-full h-[600px] rounded-3xl overflow-hidden shadow-2xl">
+              <Image 
+                src="/globe.jpeg" 
+                alt="Globe" 
+                fill
+                className="object-cover"
+              />
             </div>
           </div>
         </div>
