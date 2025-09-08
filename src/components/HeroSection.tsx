@@ -60,7 +60,7 @@ export default function HeroSection() {
           <div className="w-full max-w-lg mx-auto lg:mx-0 -mt-16">
             <div className="relative w-full h-[600px] rounded-3xl overflow-hidden shadow-2xl">
               <Image 
-                src="/globe.jpeg" 
+                src="/globe.png" 
                 alt="Globe" 
                 fill
                 className="object-cover"
