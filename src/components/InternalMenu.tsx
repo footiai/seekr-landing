@@ -1,5 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { getMe } from '@/lib/api';
+import { toast } from 'sonner';
+
+interface User {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  is_active: boolean;
+  created_at: string;
+}
 
 interface InternalMenuProps {
   activeSection: string;
@@ -7,9 +18,26 @@ interface InternalMenuProps {
 }
 
 export default function InternalMenu({ activeSection, onSectionChange }: InternalMenuProps) {
-  const { logout } = useAuth();
+  const { logout, isLoggedIn } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userData = await getMe();
+        setUser(userData);
+      } catch (error) {
+        console.error('Failed to fetch user data', error);
+        toast.error('Failed to fetch user data.');
+      }
+    };
+
+    if (isLoggedIn) {
+      fetchUser();
+    }
+  }, [isLoggedIn]);
 
   const menuItems = [
     {
@@ -171,12 +199,12 @@ export default function InternalMenu({ activeSection, onSectionChange }: Interna
                       }`}
                     >
                       <div className="w-8 h-8 bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800 rounded-full flex items-center justify-center shadow-2xl shadow-black/50 flex-shrink-0 border border-white/10">
-                        <span className="text-white text-sm font-semibold">U</span>
+                        <span className="text-white text-sm font-semibold">{user?.first_name?.[0]?.toUpperCase()}</span>
                       </div>
                       {!collapsed && (
                         <div className="flex-1 min-w-0 text-left">
-                          <div className="text-white font-medium text-sm truncate">User Account</div>
-                          <div className="text-gray-400 text-xs truncate">user@example.com</div>
+                          <div className="text-white font-medium text-sm truncate">{user ? `${user.first_name} ${user.last_name}`: 'User Account'}</div>
+                          <div className="text-gray-400 text-xs truncate">{user?.email ?? 'user@example.com'}</div>
                         </div>
                       )}
                       
@@ -219,7 +247,7 @@ export default function InternalMenu({ activeSection, onSectionChange }: Interna
                   {/* Tooltip for user in collapsed state */}
                   {collapsed && !showUserDropdown && (
                     <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 px-3 py-2 bg-black/40 backdrop-blur-lg text-white text-sm rounded-lg opacity-0 group-hover/user:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap border border-white/20 shadow-2xl shadow-black/50 z-50">
-                      User Account
+                      {user ? `${user.first_name} ${user.last_name}`: 'User Account'}
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-black/40 rotate-45 border-l border-b border-white/20"></div>
                     </div>
                   )}

@@ -10,6 +10,10 @@ interface AuthContextType {
   loginError: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  showLogin: () => void;
+  showRegister: () => void;
+  hideAuthModals: () => void;
+  authModal: 'login' | 'register' | 'none';
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,6 +30,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [authModal, setAuthModal] = useState<'login' | 'register' | 'none'>('none');
+
+  const showLogin = () => setAuthModal('login');
+  const showRegister = () => setAuthModal('register');
+  const hideAuthModals = () => setAuthModal('none');
 
   useEffect(() => {
     const token = localStorage.getItem('access_token');
@@ -67,6 +76,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loginError,
     login,
     logout,
+    showLogin,
+    showRegister,
+    hideAuthModals,
+    authModal,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

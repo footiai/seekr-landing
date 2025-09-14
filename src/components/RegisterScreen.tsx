@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { register } from '../lib/api';
 import { AxiosError } from 'axios';
+import { toast } from 'sonner';
 
 interface RegisterScreenProps {
   onClose: () => void;
@@ -12,7 +13,8 @@ interface RegisterScreenProps {
 
 export default function RegisterScreen({ onClose, onShowLogin }: RegisterScreenProps) {
   const [formData, setFormData] = useState({
-    name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -29,12 +31,12 @@ export default function RegisterScreen({ onClose, onShowLogin }: RegisterScreenP
     const password = formData.password;
     const errors = [];
     if (password.length > 0) {
-      if (password.length < 8) errors.push('Mínimo 8 caracteres');
-      if (!/[A-Z]/.test(password)) errors.push('Pelo menos 1 letra maiúscula');
-      if (!/[a-z]/.test(password)) errors.push('Pelo menos 1 letra minúscula');
-      if (!/\d/.test(password)) errors.push('Pelo menos 1 número');
-      if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) errors.push('Pelo menos 1 caractere especial');
-      if (/(.)\1/.test(password)) errors.push('Sem caracteres repetidos consecutivos');
+      if (password.length < 8) errors.push('Minimum 8 characters');
+      if (!/[A-Z]/.test(password)) errors.push('At least 1 uppercase letter');
+      if (!/[a-z]/.test(password)) errors.push('At least 1 lowercase letter');
+      if (!/\d/.test(password)) errors.push('At least 1 number');
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) errors.push('At least 1 special character');
+      if (/(.)\1/.test(password)) errors.push('No consecutive repeated characters');
     }
     return errors;
   }, [formData.password]);
@@ -67,29 +69,29 @@ export default function RegisterScreen({ onClose, onShowLogin }: RegisterScreenP
   };
 
   const getPasswordStrengthText = () => {
-    if (passwordStrength < 40) return 'Fraca';
-    if (passwordStrength < 60) return 'Razoável';
-    if (passwordStrength < 80) return 'Boa';
-    return 'Forte';
+    if (passwordStrength < 40) return 'Weak';
+    if (passwordStrength < 60) return 'Reasonable';
+    if (passwordStrength < 80) return 'Good';
+    return 'Strong';
   };
 
   const handleRegister = async () => {
     if (passwordValidation.length > 0 || formData.password !== formData.confirmPassword) {
-      setError("Por favor, corrija os erros no formulário.");
+      setError("Please fix the errors in the form.");
       return;
     }
     setError(null);
     setIsLoading(true);
     try {
-      await register(formData.name, formData.email, formData.password);
-      alert('Conta criada com sucesso! Por favor, faça o login.');
+      await register(formData.first_name, formData.last_name, formData.email, formData.password);
+      toast.success('Account created successfully! Please log in.');
       onShowLogin();
     } catch (err) {
       if (err instanceof AxiosError) {
-        const message = err.response?.data?.detail || 'Ocorreu um erro ao criar a conta.';
+        const message = err.response?.data?.detail || 'An error occurred while creating the account.';
         setError(message);
       } else {
-        setError('Ocorreu um erro inesperado.');
+        setError('An unexpected error occurred.');
       }
     } finally {
       setIsLoading(false);
@@ -142,21 +144,40 @@ export default function RegisterScreen({ onClose, onShowLogin }: RegisterScreenP
                 {error}
               </div>
             )}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
-              <div className={`relative rounded-xl border-2 transition-all duration-300 ${
-                focusedField === 'name' ? 'border-gray-400 shadow-lg bg-white/5' : 'border-gray-700 hover:border-gray-600 bg-black/30'
-              }`}>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  onFocus={() => setFocusedField('name')}
-                  onBlur={() => setFocusedField('')}
-                  className="w-full px-4 py-3 bg-transparent outline-none text-white placeholder-gray-500"
-                  placeholder="Enter your full name"
-                />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">First Name</label>
+                <div className={`relative rounded-xl border-2 transition-all duration-300 ${
+                  focusedField === 'first_name' ? 'border-gray-400 shadow-lg bg-white/5' : 'border-gray-700 hover:border-gray-600 bg-black/30'
+                }`}>
+                  <input
+                    type="text"
+                    name="first_name"
+                    value={formData.first_name}
+                    onChange={handleInputChange}
+                    onFocus={() => setFocusedField('first_name')}
+                    onBlur={() => setFocusedField('')}
+                    className="w-full px-4 py-3 bg-transparent outline-none text-white placeholder-gray-500"
+                    placeholder="Enter your first name"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Last Name</label>
+                <div className={`relative rounded-xl border-2 transition-all duration-300 ${
+                  focusedField === 'last_name' ? 'border-gray-400 shadow-lg bg-white/5' : 'border-gray-700 hover:border-gray-600 bg-black/30'
+                }`}>
+                  <input
+                    type="text"
+                    name="last_name"
+                    value={formData.last_name}
+                    onChange={handleInputChange}
+                    onFocus={() => setFocusedField('last_name')}
+                    onBlur={() => setFocusedField('')}
+                    className="w-full px-4 py-3 bg-transparent outline-none text-white placeholder-gray-500"
+                    placeholder="Enter your last name"
+                  />
+                </div>
               </div>
             </div>
 
@@ -291,11 +312,11 @@ export default function RegisterScreen({ onClose, onShowLogin }: RegisterScreenP
               <button
               type="button"
               onClick={handleRegister}
-              disabled={isLoading || !formData.name || !formData.email || !formData.password || !formData.confirmPassword || !formData.agreeToTerms || formData.password !== formData.confirmPassword || passwordValidation.length > 0}
+              disabled={isLoading || !formData.first_name || !formData.last_name || !formData.email || !formData.password || !formData.confirmPassword || !formData.agreeToTerms || formData.password !== formData.confirmPassword || passwordValidation.length > 0}
               className="relative w-full bg-gradient-to-r from-white/20 via-white/10 to-transparent backdrop-blur-sm text-white py-4 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-0.5 hover:scale-[1.02] border border-white/30 hover:border-white/50 overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:scale-100"
             >
               <span className="relative z-10 flex items-center justify-center gap-3">
-                {isLoading ? 'Criando...' : 'Create Account'}
+                {isLoading ? 'Creating...' : 'Create Account'}
                 {!isLoading && (
                   <svg className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />

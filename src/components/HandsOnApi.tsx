@@ -1,5 +1,12 @@
-import { useState, ChangeEvent, KeyboardEvent } from 'react';
+import { useState, useEffect, ChangeEvent, KeyboardEvent } from 'react';
 import Image from 'next/image';
+import { listTokens, performSearch } from '@/lib/api';
+import { toast } from 'sonner';
+
+interface ApiKey {
+  id: number;
+  token: string;
+}
 
 interface Location {
   code: string;
@@ -77,27 +84,30 @@ interface PlaceResult {
   phone: string;
 }
 
-interface SearchMetadata {
-  status: string;
-  query: string;
-  location: string;
-  language: string;
-  search_type: string;
-  total_results: string;
-  search_time: string;
-  page: number;
-  results_per_page: number;
-}
-
 interface SearchResults {
-  searchParameters: Record<string, string | number | boolean>;
+  results: OrganicResult[] | ImageResult[] | NewsResult[] | PlaceResult[];
+  engine: string;
+  query: string;
+  page: number;
+  total_results: number;
+  searchParameters?: Record<string, string | number | boolean>;
   organic_results?: OrganicResult[];
   answerBox?: AnswerBox;
   knowledgeGraph?: KnowledgeGraph;
   images?: ImageResult[];
   news?: NewsResult[];
   places?: PlaceResult[];
-  search_metadata: SearchMetadata;
+  search_metadata?: { // Making this optional as it seems to be missing
+    status: string;
+    query: string;
+    location: string;
+    language: string;
+    search_type: string;
+    total_results: string;
+    search_time: string;
+    page: number;
+    results_per_page: number;
+  };
 }
 
 interface CodeExamples {
@@ -124,22 +134,37 @@ interface CodeExamplesSectionProps {
 
 export default function SearchAPIPlayground() {
   const [query, setQuery] = useState('');
-  const [apiKey, setApiKey] = useState('');
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+  const [selectedApiKey, setSelectedApiKey] = useState('');
   const [location, setLocation] = useState('us');
   const [language, setLanguage] = useState('en');
   const [specificLocation, setSpecificLocation] = useState('');
-  const [searchType, setSearchType] = useState('search');
+  const [searchType, setSearchType] = useState<'web' | 'images' | 'news' | 'videos' | 'shopping' | 'places' | 'search'>('search');
   const [numResults, setNumResults] = useState(10);
   const [page, setPage] = useState(1);
-  const [autoCorrect, setAutoCorrect] = useState(true);
+  const [safeSearch, setSafeSearch] = useState<0 | 1 | 2>(1);
   const [timeFilter, setTimeFilter] = useState('');
   const [domain, setDomain] = useState('google.com');
   const [outputFormat, setOutputFormat] = useState('json');
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<SearchResults | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('request');
   const [activeCodeTab, setActiveCodeTab] = useState('curl');
+
+  useEffect(() => {
+    const fetchApiKeys = async () => {
+      try {
+        const keys = await listTokens();
+        setApiKeys(keys);
+        if (keys.length > 0) {
+          setSelectedApiKey(keys[0].token);
+        }
+      } catch (error) {
+        toast.error('Failed to fetch API keys.');
+      }
+    };
+    fetchApiKeys();
+  }, []);
 
   const locations: Location[] = [
     { code: 'us', name: 'United States' },
@@ -204,144 +229,72 @@ export default function SearchAPIPlayground() {
 
   const handleSearch = async () => {
     if (!query.trim()) {
-      setError('Please enter a search query');
+      toast.error('Please enter a search query');
+      return;
+    }
+    if (!selectedApiKey) {
+      toast.error('Please select an API key');
       return;
     }
 
     setIsLoading(true);
-    setError(null);
-    
-    try {
-      const mockResults: SearchResults = {
-        searchParameters: {
-          q: query,
-          gl: location,
-          hl: language,
-          type: searchType,
-          num: numResults,
-          page: page,
-          autocorrect: autoCorrect,
-          ...(specificLocation && { location: specificLocation }),
-          ...(timeFilter && { tbs: timeFilter }),
-          ...(domain !== 'google.com' && { domain: domain })
-        },
-        organic_results: [
-          {
-            position: 1,
-            title: "Sample Search Result for Your Query",
-            link: "https://example.com/result-1",
-            snippet: "This is a sample search result snippet that demonstrates how your search API would return organic results for the given query parameters.",
-            domain: "example.com",
-            date: "2025-08-30"
-          },
-          {
-            position: 2,
-            title: "Another Relevant Result",
-            link: "https://another-example.com/page",
-            snippet: "Another sample result showing how multiple organic results would appear in the API response with proper formatting and structure.",
-            domain: "another-example.com",
-            date: "2025-08-29"
-          },
-          {
-            position: 3,
-            title: "Third Search Result Example",
-            link: "https://third-example.com/article",
-            snippet: "A third example demonstrating the consistency of result formatting across multiple search results in your API response.",
-            domain: "third-example.com",
-            date: "2025-08-28"
-          }
-        ],
-        answerBox: searchType === 'search' ? {
-          answer: "Sample answer box content that appears for certain queries",
-          title: "Direct Answer",
-          source: "https://trusted-source.com"
-        } : undefined,
-        knowledgeGraph: searchType === 'search' ? {
-          title: "Sample Knowledge Graph",
-          type: "Organization",
-          description: "Sample description from knowledge graph",
-          website: "https://example.com",
-          attributes: {
-            "Founded": "2024",
-            "Industry": "Technology"
-          }
-        } : undefined,
-        images: searchType === 'images' ? [
-          {
-            position: 1,
-            title: "Sample Image Result",
-            imageUrl: "https://via.placeholder.com/300x200/333/fff?text=Sample+Image+1",
-            source: "https://example.com"
-          },
-          {
-            position: 2,
-            title: "Another Image Result",
-            imageUrl: "https://via.placeholder.com/300x200/666/fff?text=Sample+Image+2",
-            source: "https://another-example.com"
-          }
-        ] : undefined,
-        news: searchType === 'news' ? [
-          {
-            position: 1,
-            title: "Sample News Article",
-            link: "https://news-example.com/article-1",
-            snippet: "Sample news article snippet demonstrating news search results",
-            date: "2 hours ago",
-            source: "News Example",
-            imageUrl: "https://via.placeholder.com/150x100/444/fff?text=News"
-          }
-        ] : undefined,
-        places: searchType === 'places' ? [
-          {
-            position: 1,
-            title: "Sample Business",
-            place_id: "ChIJsample123456",
-            address: "123 Sample Street, Sample City",
-            rating: 4.5,
-            reviews: 234,
-            type: "Restaurant",
-            phone: "+1 (555) 123-4567"
-          }
-        ] : undefined,
-        search_metadata: {
-          status: "Success",
-          query: query,
-          location: location,
-          language: language,
-          search_type: searchType,
-          total_results: searchType === 'images' ? "About 2,345 images" : "About 1,234,567 results",
-          search_time: "0.45 seconds",
-          page: page,
-          results_per_page: numResults
-        }
-      };
 
-      await new Promise<void>(resolve => setTimeout(resolve, 1000));
-      setResults(mockResults);
-    } catch {
-      setError('Failed to fetch search results. Please try again.');
+    const timeRangeMapping: { [key: string]: 'day' | 'week' | 'month' | 'year' | undefined } = {
+      'qdr:h': 'day', // Assuming past hour falls under 'day'
+      'qdr:d': 'day',
+      'qdr:w': 'week',
+      'qdr:m': 'month',
+      'qdr:y': 'year',
+    };
+    
+    const params = {
+      query: query,
+      language: language,
+      region: location,
+      page: page,
+      num: numResults,
+      search_type: searchType === 'search' ? 'web' : searchType,
+      time_range: timeRangeMapping[timeFilter] || undefined,
+      safe_search: safeSearch,
+      domain: domain,
+    };
+
+    try {
+      const searchResults = await performSearch(params, selectedApiKey);
+      setResults(searchResults);
+    } catch (err) {
+      toast.error('Failed to fetch search results. Please try again.');
+      console.error(err);
     } finally {
       setIsLoading(false);
     }
   };
 
   const generateCurlCommand = () => {
+    const timeRangeMapping: { [key: string]: 'day' | 'week' | 'month' | 'year' | undefined } = {
+      'qdr:h': 'day',
+      'qdr:d': 'day',
+      'qdr:w': 'week',
+      'qdr:m': 'month',
+      'qdr:y': 'year',
+    };
+
     const payload = {
-      q: query,
-      gl: location,
-      hl: language,
-      type: searchType,
+      query: query,
+      language: language,
+      region: location,
+      search_type: searchType === 'search' ? 'web' : searchType,
       num: numResults,
       page: page,
-      autocorrect: autoCorrect,
+      time_range: timeRangeMapping[timeFilter] || undefined,
+      safe_search: safeSearch,
+      domain: domain,
       ...(specificLocation && { location: specificLocation }),
-      ...(timeFilter && { tbs: timeFilter }),
-      ...(domain !== 'google.com' && { domain: domain })
     };
 
     return `curl -X POST "https://google.serper.dev/${searchType}" \\
 -H "Content-Type: application/json" \\
--H "X-API-KEY: ${apiKey || 'YOUR_API_KEY'}" \\
+-H "X-API-KEY: ${selectedApiKey || 'YOUR_API_KEY'}" \\
 -d '${JSON.stringify(payload, null, 2)}'`;
   };
 
@@ -353,7 +306,7 @@ export default function SearchAPIPlayground() {
       type: searchType,
       num: numResults,
       page: page,
-      autocorrect: autoCorrect,
+      safe_search: safeSearch,
       ...(specificLocation && { location: specificLocation }),
       ...(timeFilter && { tbs: timeFilter }),
       ...(domain !== 'google.com' && { domain: domain })
@@ -364,7 +317,7 @@ export default function SearchAPIPlayground() {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-API-KEY': '${apiKey || 'YOUR_API_KEY'}'
+    'X-API-KEY': '${selectedApiKey || 'YOUR_API_KEY'}'
   },
   body: JSON.stringify(${JSON.stringify(payload, null, 4)})
 });
@@ -377,7 +330,7 @@ import json
 
 url = "https://google.serper.dev/${searchType}"
 headers = {
-    "X-API-KEY": "${apiKey || 'YOUR_API_KEY'}",
+    "X-API-KEY": "${selectedApiKey || 'YOUR_API_KEY'}",
     "Content-Type": "application/json"
 }
 payload = ${JSON.stringify(payload, null, 4)}
@@ -399,7 +352,7 @@ ${JSON.stringify(payload, null, 4)}
 HttpClient client = HttpClient.newHttpClient();
 HttpRequest request = HttpRequest.newBuilder()
     .uri(URI.create(url))
-    .header("X-API-KEY", "${apiKey || 'YOUR_API_KEY'}")
+    .header("X-API-KEY", "${selectedApiKey || 'YOUR_API_KEY'}")
     .header("Content-Type", "application/json")
     .POST(HttpRequest.BodyPublishers.ofString(payload))
     .build();
@@ -417,7 +370,7 @@ var client = new HttpClient();
 var url = "https://google.serper.dev/${searchType}";
 var payload = @"${JSON.stringify(payload, null, 4)}";
 
-client.DefaultRequestHeaders.Add("X-API-KEY", "${apiKey || 'YOUR_API_KEY'}");
+client.DefaultRequestHeaders.Add("X-API-KEY", "${selectedApiKey || 'YOUR_API_KEY'}");
 
 var content = new StringContent(payload, Encoding.UTF8, "application/json");
 var response = await client.PostAsync(url, content);
@@ -439,11 +392,11 @@ payload = {
   type: "${searchType}",
   num: ${numResults},
   page: ${page},
-  autocorrect: ${autoCorrect}
+  safe_search: ${safeSearch}
 }
 
 request = Net::HTTP::Post.new(uri)
-request['X-API-KEY'] = '${apiKey || 'YOUR_API_KEY'}'
+request['X-API-KEY'] = '${selectedApiKey || 'YOUR_API_KEY'}'
 request['Content-Type'] = 'application/json'
 request.body = payload.to_json
 
@@ -469,13 +422,13 @@ func main() {
         "type": "${searchType}",
         "num": ${numResults},
         "page": ${page},
-        "autocorrect": ${autoCorrect}
+        "safe_search": ${safeSearch}
     }
     
     jsonPayload, _ := json.Marshal(payload)
     
     req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
-    req.Header.Set("X-API-KEY", "${apiKey || 'YOUR_API_KEY'}")
+    req.Header.Set("X-API-KEY", "${selectedApiKey || 'YOUR_API_KEY'}")
     req.Header.Set("Content-Type", "application/json")
     
     client := &http.Client{}
@@ -524,13 +477,18 @@ func main() {
                     <label className="block text-sm font-medium text-gray-300 mb-2">
                       API Key
                     </label>
-                    <input
-                      type="password"
-                      value={apiKey}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => setApiKey(e.target.value)}
-                      placeholder="Enter your API key..."
-                      className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
-                    />
+                    <select
+                      value={selectedApiKey}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedApiKey(e.target.value)}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
+                    >
+                      <option value="" disabled className="bg-gray-800">Select an API Key</option>
+                      {apiKeys.map(key => (
+                        <option key={key.id} value={key.token} className="bg-gray-800">
+                          Token #{key.id}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
@@ -554,7 +512,7 @@ func main() {
                       </label>
                       <select
                         value={searchType}
-                        onChange={(e: ChangeEvent<HTMLSelectElement>) => setSearchType(e.target.value)}
+                        onChange={(e: ChangeEvent<HTMLSelectElement>) => setSearchType(e.target.value as 'web' | 'images' | 'news' | 'videos' | 'shopping' | 'places' | 'search')}
                         className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
                       >
                         {searchTypes.map(type => (
@@ -683,15 +641,16 @@ func main() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Auto Correct
+                        Safe Search
                       </label>
                       <select
-                        value={autoCorrect.toString()}
-                        onChange={(e: ChangeEvent<HTMLSelectElement>) => setAutoCorrect(e.target.value === 'true')}
+                        value={safeSearch}
+                        onChange={(e: ChangeEvent<HTMLSelectElement>) => setSafeSearch(parseInt(e.target.value) as 0 | 1 | 2)}
                         className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
                       >
-                        <option value="true" className="bg-gray-800">Enabled</option>
-                        <option value="false" className="bg-gray-800">Disabled</option>
+                        <option value={1} className="bg-gray-800">Medium</option>
+                        <option value={2} className="bg-gray-800">High</option>
+                        <option value={0} className="bg-gray-800">Off</option>
                       </select>
                     </div>
 
@@ -731,12 +690,6 @@ func main() {
                       </>
                     )}
                   </button>
-
-                  {error && (
-                    <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
-                      {error}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -850,8 +803,8 @@ func main() {
                             </div>
                           )}
                           <div className="flex justify-between">
-                            <span className="text-gray-400">Auto Correct:</span>
-                            <span className="text-white">{autoCorrect ? 'Enabled' : 'Disabled'}</span>
+                            <span className="text-gray-400">Safe Search:</span>
+                            <span className="text-white">{safeSearch === 1 ? 'Medium' : safeSearch === 2 ? 'High' : 'Off'}</span>
                           </div>
                         </div>
                       </div>
@@ -884,28 +837,20 @@ func main() {
                             <h3 className="text-white font-medium mb-3">Search Metadata</h3>
                             <div className="grid grid-cols-2 gap-3 text-sm">
                               <div>
-                                <span className="text-gray-400">Status:</span>
-                                <span className="ml-2 text-green-400">{results.search_metadata.status}</span>
+                                <span className="text-gray-400">Engine:</span>
+                                <span className="ml-2 text-white">{results.engine}</span>
                               </div>
                               <div>
                                 <span className="text-gray-400">Results:</span>
-                                <span className="ml-2 text-white">{results.search_metadata.total_results}</span>
+                                <span className="ml-2 text-white">{results.total_results}</span>
                               </div>
                               <div>
-                                <span className="text-gray-400">Time:</span>
-                                <span className="ml-2 text-white">{results.search_metadata.search_time}</span>
-                              </div>
-                              <div>
-                                <span className="text-gray-400">Type:</span>
-                                <span className="ml-2 text-white capitalize">{results.search_metadata.search_type}</span>
+                                <span className="text-gray-400">Query:</span>
+                                <span className="ml-2 text-white">{results.query}</span>
                               </div>
                               <div>
                                 <span className="text-gray-400">Page:</span>
-                                <span className="ml-2 text-white">{results.search_metadata.page}</span>
-                              </div>
-                              <div>
-                                <span className="text-gray-400">Per Page:</span>
-                                <span className="ml-2 text-white">{results.search_metadata.results_per_page}</span>
+                                <span className="ml-2 text-white">{results.page}</span>
                               </div>
                             </div>
                           </div>

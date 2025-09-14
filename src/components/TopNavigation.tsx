@@ -2,11 +2,7 @@
 
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-
-interface TopNavigationProps {
-  onShowLogin?: () => void;
-  onShowRegister?: () => void;
-}
+import { useAuth } from '@/context/AuthContext';
 
 const searchSuggestions = [
   'AI powered search...',
@@ -16,7 +12,8 @@ const searchSuggestions = [
   'Smart search results...'
 ];
 
-export default function TopNavigation({ onShowLogin, onShowRegister }: TopNavigationProps) {
+export default function TopNavigation() {
+  const { showLogin, showRegister } = useAuth();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [typewriterText, setTypewriterText] = useState('');
@@ -167,7 +164,7 @@ export default function TopNavigation({ onShowLogin, onShowRegister }: TopNaviga
                   </button>
                 ))}
                 
-                <button onClick={onShowLogin} className="relative group/signin overflow-hidden">
+                <button onClick={showLogin} className="relative group/signin overflow-hidden">
                   <div className="relative bg-transparent border border-gray-600 hover:border-gray-400 text-gray-300 hover:text-white px-6 py-2.5 rounded-xl font-medium text-base transition-all duration-300">
                     <span className="relative z-10 flex items-center gap-2">
                       Sign In
@@ -176,7 +173,7 @@ export default function TopNavigation({ onShowLogin, onShowRegister }: TopNaviga
                   </div>
                 </button>
                 
-                <button onClick={onShowRegister} className="relative group/register overflow-hidden">
+                <button onClick={showRegister} className="relative group/register overflow-hidden">
                   <div className="absolute -inset-1 bg-gradient-to-r from-white/20 via-gray-400/20 to-white/20 rounded-xl opacity-0 group-hover/register:opacity-70 blur transition-all duration-500"></div>
                   
                   <div className="relative bg-gradient-to-r from-white via-gray-100 to-white text-black px-8 py-3 rounded-xl font-semibold text-base shadow-2xl transition-all duration-500">

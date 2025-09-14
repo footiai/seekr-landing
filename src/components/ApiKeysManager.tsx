@@ -1,82 +1,59 @@
 "use client";
 
-import { useState, KeyboardEvent, ChangeEvent } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
+import { listTokens, createToken, deleteToken } from "@/lib/api";
+import ApiKeyCard from "./ApiKeyCard";
+import { toast } from "sonner";
 
 interface ApiKey {
   id: number;
-  name: string;
-  key: string;
-  status: "active" | "inactive";
-  usage: number;
-  lastUsed: string;
-  requests: number;
-  createdAt: string;
-}
-
-interface VisibleKeys {
-  [keyId: number]: boolean;
+  token: string;
+  requests_used: number;
+  is_active: boolean;
+  created_at: string;
+  package: {
+    name: string;
+    request_limit: number;
+  };
 }
 
 export default function ApiKeysManager() {
-  const [keys, setKeys] = useState<ApiKey[]>([
-    {
-      id: 1,
-      name: "Production Web App",
-      key: "ak_live_7f8g9h0i1j2k3l4m5n6o7p8q9r0s1t2u3v4w5x6y7z8a9b0c1d2e3f4g5h6i7j8k9l0m",
-      status: "active",
-      usage: 85,
-      lastUsed: "2 hours ago",
-      requests: 15420,
-      createdAt: "Jan 15, 2025",
-    },
-    {
-      id: 2,
-      name: "Local Testing",
-      key: "ak_test_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3h4i5j6k7l8m9n0",
-      status: "inactive",
-      usage: 12,
-      lastUsed: "3 days ago",
-      requests: 234,
-      createdAt: "Jan 10, 2025",
-    },
-    {
-      id: 3,
-      name: "Mobile App v2",
-      key: "ak_live_z9y8x7w6v5u4t3s2r1q0p9o8n7m6l5k4j3i2h1g0f9e8d7c6b5a4z3y2x1w0v9u8t7s6r5q4p3o2n1m0",
-      status: "active",
-      usage: 67,
-      lastUsed: "1 hour ago",
-      requests: 8967,
-      createdAt: "Jan 08, 2025",
-    },
-  ]);
-
+  const [keys, setKeys] = useState<ApiKey[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [keysPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showNewKeyModal, setShowNewKeyModal] = useState(false);
-  const [editingKey, setEditingKey] = useState<number | null>(null);
   const [newKeyName, setNewKeyName] = useState("");
   const [generatingKey, setGeneratingKey] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState<number | null>(null);
-  const [copiedKey, setCopiedKey] = useState<number | null>(null);
-  const [visibleKeys, setVisibleKeys] = useState<VisibleKeys>({});
 
-  // Toggle key visibility
-  const toggleKeyVisibility = (keyId: number) => {
-    setVisibleKeys((prev) => ({
-      ...prev,
-      [keyId]: !prev[keyId],
-    }));
-  };
+  useEffect(() => {
+    const fetchKeys = async () => {
+      try {
+        const fetchedKeys = await listTokens();
+        setKeys(fetchedKeys);
+      } catch (error) {
+        toast.error("Failed to fetch API keys.");
+        console.error("Failed to fetch API keys:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchKeys();
+  }, []);
 
   // Filter keys
   const filteredKeys = keys.filter((key) => {
     const matchesSearch =
-      key.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      key.key.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || key.status === statusFilter;
+      `Token #${key.id}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      key.token.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && key.is_active) ||
+      (statusFilter === "inactive" && !key.is_active);
     return matchesSearch && matchesStatus;
   });
 
@@ -86,76 +63,37 @@ export default function ApiKeysManager() {
   const currentKeys = filteredKeys.slice(indexOfFirstKey, indexOfLastKey);
   const totalPages = Math.ceil(filteredKeys.length / keysPerPage);
 
-  // Generate random API key
-  const generateApiKey = () => {
-    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-    let result = "ak_live_";
-    for (let i = 0; i < 64; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
-
   // Create new key
   const handleCreateKey = async () => {
     if (!newKeyName.trim()) return;
 
     setGeneratingKey(true);
-
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    const newKey: ApiKey = {
-      id: keys.length + 1,
-      name: newKeyName,
-      key: generateApiKey(),
-      status: "active" as const,
-      usage: 0,
-      lastUsed: "Never",
-      requests: 0,
-      createdAt: new Date().toLocaleDateString("en-US", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }),
-    };
-
-    setKeys([newKey, ...keys]);
-    setNewKeyName("");
-    setShowNewKeyModal(false);
-    setGeneratingKey(false);
-  };
-
-  // Copy to clipboard
-  const copyToClipboard = async (text: string, keyId: number) => {
     try {
-      await navigator.clipboard.writeText(text);
-      setCopiedKey(keyId);
-      setTimeout(() => setCopiedKey(null), 2000);
-    } catch (err) {
-      console.error("Failed to copy: ", err);
+      const newKey = await createToken(newKeyName);
+      setKeys([newKey, ...keys]);
+      toast.success("API key created successfully!");
+      setShowNewKeyModal(false);
+      setNewKeyName("");
+    } catch (error) {
+      toast.error("Failed to create API key.");
+      console.error("Failed to create API key:", error);
+    } finally {
+      setGeneratingKey(false);
     }
   };
 
   // Delete key
-  const handleDeleteKey = (keyId: number) => {
-    setKeys(keys.filter((key) => key.id !== keyId));
-    setShowDeleteModal(null);
-  };
-
-  // Update key name
-  const handleUpdateKeyName = (keyId: number, newName: string) => {
-    setKeys(
-      keys.map((key) => (key.id === keyId ? { ...key, name: newName } : key)),
-    );
-    setEditingKey(null);
-  };
-
-  const getUsageColor = (usage: number) => {
-    if (usage >= 80) return "bg-red-500";
-    if (usage >= 60) return "bg-orange-500";
-    if (usage >= 40) return "bg-yellow-500";
-    return "bg-green-500";
+  const handleDeleteKey = async (keyId: number) => {
+    try {
+      await deleteToken(keyId);
+      setKeys(keys.filter((key) => key.id !== keyId));
+      toast.success("API key deleted successfully!");
+    } catch (error) {
+      toast.error("Failed to delete API key.");
+      console.error("Failed to delete API key:", error);
+    } finally {
+      setShowDeleteModal(null);
+    }
   };
 
   return (
@@ -190,20 +128,27 @@ export default function ApiKeysManager() {
             { title: "Total Keys", value: keys.length },
             {
               title: "Active Keys",
-              value: keys.filter((k) => k.status === "active").length,
+              value: keys.filter((k) => k.is_active).length,
             },
             {
               title: "Total Requests",
               value: keys
-                .reduce((acc, k) => acc + k.requests, 0)
+                .reduce((acc, k) => acc + k.requests_used, 0)
                 .toLocaleString(),
             },
             {
               title: "Average Usage",
               value:
-                Math.round(
-                  keys.reduce((acc, k) => acc + k.usage, 0) / keys.length,
-                ) + "%",
+                (keys.length > 0
+                  ? Math.round(
+                      keys.reduce(
+                        (acc, k) =>
+                          acc +
+                          (k.requests_used / k.package.request_limit) * 100,
+                        0,
+                      ) / keys.length,
+                    )
+                  : 0) + "%",
             },
           ].map((stat, index) => (
             <div
@@ -286,216 +231,17 @@ export default function ApiKeysManager() {
 
         {/* API Keys List */}
         <div className="space-y-3 mb-6">
-          {currentKeys.map((key) => (
-            <div
-              key={key.id}
-              className="bg-black/20 backdrop-blur-2xl rounded-lg border border-white/20 p-4 relative overflow-hidden group hover:border-white/30 transition-all duration-300"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none"></div>
-
-              <div className="relative z-10">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-3">
-                  {/* Key Info */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      {editingKey === key.id ? (
-                        <input
-                          type="text"
-                          defaultValue={key.name}
-                          onBlur={(e: ChangeEvent<HTMLInputElement>) =>
-                            handleUpdateKeyName(key.id, e.target.value)
-                          }
-                          onKeyPress={(e: KeyboardEvent<HTMLInputElement>) => {
-                            if (e.key === "Enter") {
-                              handleUpdateKeyName(key.id, (e.target as HTMLInputElement).value);
-                            }
-                          }}
-                          className="text-lg font-medium text-white bg-transparent border-b border-gray-400 outline-none"
-                          autoFocus
-                        />
-                      ) : (
-                        <h3
-                          className="text-lg font-medium text-white cursor-pointer hover:text-gray-300 transition-colors"
-                          onClick={() => setEditingKey(key.id)}
-                        >
-                          {key.name}
-                        </h3>
-                      )}
-
-                      <span
-                        className={`px-2 py-0.5 text-xs rounded-full ${
-                          key.status === "active"
-                            ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                            : "bg-gray-500/20 text-gray-400 border border-gray-500/30"
-                        }`}
-                      >
-                        {key.status === "active" ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-
-                    <div className="text-xs text-gray-400 mb-2">
-                      Created on {key.createdAt} • Last used: {key.lastUsed} •{" "}
-                      {key.requests.toLocaleString()} requests
-                    </div>
-
-                    {/* Usage Bar */}
-                    <div className="mb-2">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs text-gray-400">
-                          Quota usage:
-                        </span>
-                        <span className="text-xs text-white font-medium">
-                          {key.usage}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-700 rounded-full h-1">
-                        <div
-                          className={`h-1 rounded-full transition-all duration-300 ${getUsageColor(
-                            key.usage,
-                          )}`}
-                          style={{ width: `${key.usage}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => copyToClipboard(key.key, key.id)}
-                      className="p-1.5 bg-black/30 border border-gray-700 rounded-md text-gray-400 hover:text-white hover:border-gray-500 transition-all duration-200 relative"
-                    >
-                      {copiedKey === key.id ? (
-                        <svg
-                          className="w-3.5 h-3.5 text-green-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          className="w-3.5 h-3.5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                          />
-                        </svg>
-                      )}
-                    </button>
-
-                    <button
-                      onClick={() => setEditingKey(key.id)}
-                      className="p-1.5 bg-black/30 border border-gray-700 rounded-md text-gray-400 hover:text-white hover:border-gray-500 transition-all duration-200"
-                    >
-                      <svg
-                        className="w-3.5 h-3.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                    </button>
-
-                    <button
-                      onClick={() => setShowDeleteModal(key.id)}
-                      className="p-1.5 bg-black/30 border border-gray-700 rounded-md text-gray-400 hover:text-red-400 hover:border-red-500/50 transition-all duration-200"
-                    >
-                      <svg
-                        className="w-3.5 h-3.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                {/* API Key Display */}
-                <div className="bg-black/40 border border-gray-700 rounded-lg p-3 font-mono text-sm relative">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-gray-300 flex-1 pr-8">
-                      {visibleKeys[key.id]
-                        ? key.key
-                        : "••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••"}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => toggleKeyVisibility(key.id)}
-                        className="text-gray-400 hover:text-white transition-colors"
-                      >
-                        {visibleKeys[key.id] ? (
-                          <svg
-                            className="w-3.5 h-3.5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
-                            />
-                          </svg>
-                        ) : (
-                          <svg
-                            className="w-3.5 h-3.5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                            />
-                          </svg>
-                        )}
-                      </button>
-                      {copiedKey === key.id && (
-                        <span className="text-green-400 text-xs whitespace-nowrap animate-pulse">
-                          Copied!
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+          {isLoading ? (
+            <div className="text-center text-gray-400">Loading keys...</div>
+          ) : (
+            currentKeys.map((key) => (
+              <ApiKeyCard
+                key={key.id}
+                apiKey={key}
+                onDelete={() => setShowDeleteModal(key.id)}
+              />
+            ))
+          )}
         </div>
 
         {/* Pagination */}
