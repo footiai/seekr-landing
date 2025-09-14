@@ -4,19 +4,31 @@ import path from 'path';
 
 // Manually read and parse the .env file
 const envPath = path.resolve(process.cwd(), '.env');
+console.log('Looking for .env at:', envPath);
+console.log('.env exists:', fs.existsSync(envPath));
+
 if (fs.existsSync(envPath)) {
   const envFileContent = fs.readFileSync(envPath, 'utf8');
+  console.log('.env file content:', JSON.stringify(envFileContent));
+  
   const envConfig = Object.fromEntries(
-    envFileContent.split('\n').map(line => {
-      const [key, ...value] = line.split('=');
-      return [key.trim(), value.join('=').trim()];
-    })
+    envFileContent.split('\n')
+      .filter(line => line.trim() && !line.startsWith('#'))
+      .map(line => {
+        const [key, ...value] = line.split('=');
+        return [key.trim(), value.join('=').trim()];
+      })
   );
+  
+  console.log('Parsed env config:', envConfig);
+  
   for (const key in envConfig) {
     if (!process.env[key]) {
       process.env[key] = envConfig[key];
     }
   }
+  
+  console.log('API_URL after parsing:', process.env.API_URL);
 }
 
 
