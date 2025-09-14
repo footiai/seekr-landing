@@ -447,40 +447,40 @@ func main() {
 
   return (
     <div className="min-h-screen bg-black p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-400 via-white to-gray-400 bg-clip-text text-transparent mb-2">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-6 text-center">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-400 via-white to-gray-400 bg-clip-text text-transparent mb-1">
             Hands-on API
           </h1>
-          <p className="text-gray-400 text-lg">
+          <p className="text-gray-400 text-base">
             Test and explore our search API with real-time results
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-6">
-            <div className="bg-black/20 backdrop-blur-2xl rounded-2xl border-2 border-white/40 shadow-2xl shadow-gray-500/30 p-6 relative overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-5">
+            <div className="bg-black/20 backdrop-blur-2xl rounded-xl border-2 border-white/30 shadow-xl shadow-gray-500/20 p-5 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/10 pointer-events-none"></div>
-              <div className="absolute -top-1 -left-1 w-full h-full bg-gradient-to-br from-gray-700 to-transparent rounded-3xl opacity-20 blur-xl pointer-events-none"></div>
+              <div className="absolute -top-1 -left-1 w-full h-full bg-gradient-to-br from-gray-700 to-transparent rounded-2xl opacity-15 blur-lg pointer-events-none"></div>
               
               <div className="relative z-10">
-                <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="text-lg font-semibold text-white mb-5 flex items-center gap-2.5">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                   API Configuration
                 </h2>
 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-xs font-medium text-gray-300 mb-1.5">
                       API Key
                     </label>
                     <select
                       value={selectedApiKey}
                       onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedApiKey(e.target.value)}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
                     >
                       <option value="" disabled className="bg-gray-800">Select an API Key</option>
                       {apiKeys.map(key => (
@@ -492,7 +492,7 @@ func main() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-xs font-medium text-gray-300 mb-1.5">
                       Search Query
                     </label>
                     <input
@@ -500,20 +500,20 @@ func main() {
                       value={query}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
                       placeholder="Enter your search query..."
-                      className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
                       onKeyPress={(e: KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleSearch()}
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-xs font-medium text-gray-300 mb-1.5">
                         Search Type
                       </label>
                       <select
                         value={searchType}
                         onChange={(e: ChangeEvent<HTMLSelectElement>) => setSearchType(e.target.value as 'web' | 'images' | 'news' | 'videos' | 'shopping' | 'places' | 'search')}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
                       >
                         {searchTypes.map(type => (
                           <option key={type.code} value={type.code} className="bg-gray-800">
@@ -524,13 +524,13 @@ func main() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-xs font-medium text-gray-300 mb-1.5">
                         Results Count
                       </label>
                       <select
                         value={numResults}
                         onChange={(e: ChangeEvent<HTMLSelectElement>) => setNumResults(parseInt(e.target.value))}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
                       >
                         <option value={10} className="bg-gray-800">10 results</option>
                         <option value={20} className="bg-gray-800">20 results</option>
@@ -540,15 +540,15 @@ func main() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-xs font-medium text-gray-300 mb-1.5">
                         Country (GL)
                       </label>
                       <select
                         value={location}
                         onChange={(e: ChangeEvent<HTMLSelectElement>) => setLocation(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
                       >
                         {locations.map(loc => (
                           <option key={loc.code} value={loc.code} className="bg-gray-800">
@@ -559,13 +559,13 @@ func main() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-xs font-medium text-gray-300 mb-1.5">
                         Language (HL)
                       </label>
                       <select
                         value={language}
                         onChange={(e: ChangeEvent<HTMLSelectElement>) => setLanguage(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
                       >
                         {languages.map(lang => (
                           <option key={lang.code} value={lang.code} className="bg-gray-800">
@@ -577,7 +577,7 @@ func main() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-xs font-medium text-gray-300 mb-1.5">
                       Specific Location (Optional)
                     </label>
                     <input
@@ -585,19 +585,19 @@ func main() {
                       value={specificLocation}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => setSpecificLocation(e.target.value)}
                       placeholder="e.g., New York, NY or Paris, France"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-xs font-medium text-gray-300 mb-1.5">
                         Google Domain
                       </label>
                       <select
                         value={domain}
                         onChange={(e: ChangeEvent<HTMLSelectElement>) => setDomain(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
                       >
                         {domains.map(d => (
                           <option key={d.code} value={d.code} className="bg-gray-800">
@@ -608,13 +608,13 @@ func main() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-xs font-medium text-gray-300 mb-1.5">
                         Time Filter
                       </label>
                       <select
                         value={timeFilter}
                         onChange={(e: ChangeEvent<HTMLSelectElement>) => setTimeFilter(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
                       >
                         {timeFilters.map(filter => (
                           <option key={filter.code} value={filter.code} className="bg-gray-800">
@@ -625,9 +625,9 @@ func main() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-xs font-medium text-gray-300 mb-1.5">
                         Page
                       </label>
                       <input
@@ -635,18 +635,18 @@ func main() {
                         min="1"
                         value={page}
                         onChange={(e: ChangeEvent<HTMLInputElement>) => setPage(parseInt(e.target.value) || 1)}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-xs font-medium text-gray-300 mb-1.5">
                         Safe Search
                       </label>
                       <select
                         value={safeSearch}
                         onChange={(e: ChangeEvent<HTMLSelectElement>) => setSafeSearch(parseInt(e.target.value) as 0 | 1 | 2)}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
                       >
                         <option value={1} className="bg-gray-800">Medium</option>
                         <option value={2} className="bg-gray-800">High</option>
@@ -655,13 +655,13 @@ func main() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-xs font-medium text-gray-300 mb-1.5">
                         Format
                       </label>
                       <select
                         value={outputFormat}
                         onChange={(e: ChangeEvent<HTMLSelectElement>) => setOutputFormat(e.target.value)}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300"
                       >
                         <option value="json" className="bg-gray-800">JSON</option>
                         <option value="html" className="bg-gray-800">HTML</option>
@@ -672,7 +672,7 @@ func main() {
                   <button
                     onClick={handleSearch}
                     disabled={isLoading || !query.trim()}
-                    className="w-full py-4 bg-gradient-to-r from-gray-600 via-gray-700 to-gray-600 hover:from-gray-500 hover:via-gray-600 hover:to-gray-500 disabled:from-gray-800 disabled:via-gray-800 disabled:to-gray-800 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
+                    className="w-full py-3 bg-gradient-to-r from-gray-600 via-gray-700 to-gray-600 hover:from-gray-500 hover:via-gray-600 hover:to-gray-500 disabled:from-gray-800 disabled:via-gray-800 disabled:to-gray-800 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                   >
                     {isLoading ? (
                       <>
@@ -694,13 +694,13 @@ func main() {
               </div>
             </div>
 
-            <div className="bg-black/20 backdrop-blur-2xl rounded-2xl border-2 border-white/40 shadow-2xl shadow-gray-500/30 p-6 relative overflow-hidden">
+            <div className="bg-black/20 backdrop-blur-2xl rounded-xl border-2 border-white/30 shadow-xl shadow-gray-500/20 p-5 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/10 pointer-events-none"></div>
-              <div className="absolute -top-1 -left-1 w-full h-full bg-gradient-to-br from-gray-700 to-transparent rounded-3xl opacity-20 blur-xl pointer-events-none"></div>
+              <div className="absolute -top-1 -left-1 w-full h-full bg-gradient-to-br from-gray-700 to-transparent rounded-2xl opacity-15 blur-lg pointer-events-none"></div>
               
               <div className="relative z-10">
-                <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-3">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2.5">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                   </svg>
                   Code Examples
@@ -716,16 +716,16 @@ func main() {
             </div>
           </div>
 
-          <div className="space-y-6">
-            <div className="bg-black/20 backdrop-blur-2xl rounded-2xl border-2 border-white/40 shadow-2xl shadow-gray-500/30 relative overflow-hidden h-[700px] flex flex-col">
+          <div className="space-y-5">
+            <div className="bg-black/20 backdrop-blur-2xl rounded-xl border-2 border-white/30 shadow-xl shadow-gray-500/20 relative overflow-hidden h-[630px] flex flex-col">
               <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/10 pointer-events-none"></div>
-              <div className="absolute -top-1 -left-1 w-full h-full bg-gradient-to-br from-gray-700 to-transparent rounded-3xl opacity-20 blur-xl pointer-events-none"></div>
+              <div className="absolute -top-1 -left-1 w-full h-full bg-gradient-to-br from-gray-700 to-transparent rounded-2xl opacity-15 blur-lg pointer-events-none"></div>
               
               <div className="relative z-10 flex flex-col h-full">
-                <div className="p-6 border-b border-white/10">
+                <div className="p-5 border-b border-white/10">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-white flex items-center gap-3">
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <h2 className="text-lg font-semibold text-white flex items-center gap-2.5">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       API Response
