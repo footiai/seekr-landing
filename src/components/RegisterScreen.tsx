@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Image from 'next/image';
+import { register } from '../lib/api';
+import { AxiosError } from 'axios';
 
 interface RegisterScreenProps {
   onClose: () => void;
@@ -18,9 +20,36 @@ export default function RegisterScreen({ onClose, onShowLogin }: RegisterScreenP
   });
   
   const [focusedField, setFocusedField] = useState('');
-  const [passwordStrength, setPasswordStrength] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const passwordValidation = useMemo(() => {
+    const password = formData.password;
+    const errors = [];
+    if (password.length > 0) {
+      if (password.length < 8) errors.push('Mínimo 8 caracteres');
+      if (!/[A-Z]/.test(password)) errors.push('Pelo menos 1 letra maiúscula');
+      if (!/[a-z]/.test(password)) errors.push('Pelo menos 1 letra minúscula');
+      if (!/\d/.test(password)) errors.push('Pelo menos 1 número');
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) errors.push('Pelo menos 1 caractere especial');
+      if (/(.)\1/.test(password)) errors.push('Sem caracteres repetidos consecutivos');
+    }
+    return errors;
+  }, [formData.password]);
+
+  const passwordStrength = useMemo(() => {
+    const password = formData.password;
+    let strength = 0;
+    if (password.length >= 8) strength += 20;
+    if (/[A-Z]/.test(password)) strength += 20;
+    if (/[a-z]/.test(password)) strength += 20;
+    if (/\d/.test(password)) strength += 20;
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength += 20;
+    return strength;
+  }, [formData.password]);
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -28,30 +57,43 @@ export default function RegisterScreen({ onClose, onShowLogin }: RegisterScreenP
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-
-    if (name === 'password') {
-      const strength = Math.min(value.length * 25, 100);
-      setPasswordStrength(strength);
-    }
   };
 
   const getPasswordStrengthColor = () => {
-    if (passwordStrength < 25) return 'bg-red-500';
-    if (passwordStrength < 50) return 'bg-orange-500';
-    if (passwordStrength < 75) return 'bg-yellow-500';
+    if (passwordStrength < 40) return 'bg-red-500';
+    if (passwordStrength < 60) return 'bg-orange-500';
+    if (passwordStrength < 80) return 'bg-yellow-500';
     return 'bg-green-500';
   };
 
   const getPasswordStrengthText = () => {
-    if (passwordStrength < 25) return 'Weak';
-    if (passwordStrength < 50) return 'Fair';
-    if (passwordStrength < 75) return 'Good';
-    return 'Strong';
+    if (passwordStrength < 40) return 'Fraca';
+    if (passwordStrength < 60) return 'Razoável';
+    if (passwordStrength < 80) return 'Boa';
+    return 'Forte';
   };
 
   const handleRegister = async () => {
-    alert('Account created successfully!');
-    onClose();
+    if (passwordValidation.length > 0 || formData.password !== formData.confirmPassword) {
+      setError("Por favor, corrija os erros no formulário.");
+      return;
+    }
+    setError(null);
+    setIsLoading(true);
+    try {
+      await register(formData.name, formData.email, formData.password);
+      alert('Conta criada com sucesso! Por favor, faça o login.');
+      onShowLogin();
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        const message = err.response?.data?.detail || 'Ocorreu um erro ao criar a conta.';
+        setError(message);
+      } else {
+        setError('Ocorreu um erro inesperado.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -95,6 +137,11 @@ export default function RegisterScreen({ onClose, onShowLogin }: RegisterScreenP
           <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none"></div>
           
           <div className="space-y-6 relative z-10">
+            {error && (
+              <div className="bg-red-500/20 border border-red-500 text-red-300 text-sm rounded-lg p-3 text-center">
+                {error}
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
               <div className={`relative rounded-xl border-2 transition-all duration-300 ${
@@ -157,18 +204,25 @@ export default function RegisterScreen({ onClose, onShowLogin }: RegisterScreenP
                 </button>
               </div>
               {formData.password && (
-                <div className="mt-2">
-                  <div className="flex items-center gap-2 mb-1">
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center gap-2">
                     <div className="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className={`h-full transition-all duration-300 ${getPasswordStrengthColor()}`}
                         style={{ width: `${passwordStrength}%` }}
                       ></div>
                     </div>
-                    <span className={`text-xs font-medium ${passwordStrength < 50 ? 'text-red-400' : passwordStrength < 75 ? 'text-yellow-400' : 'text-green-400'}`}>
+                    <span className={`text-xs font-medium ${passwordStrength < 60 ? 'text-red-400' : passwordStrength < 80 ? 'text-yellow-400' : 'text-green-400'}`}>
                       {getPasswordStrengthText()}
                     </span>
                   </div>
+                  {passwordValidation.length > 0 && (
+                    <ul className="text-xs text-red-400 space-y-1 list-disc list-inside">
+                      {passwordValidation.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               )}
             </div>
@@ -234,17 +288,19 @@ export default function RegisterScreen({ onClose, onShowLogin }: RegisterScreenP
               </p>
             </div>
 
-            <button 
+              <button
               type="button"
               onClick={handleRegister}
-              disabled={!formData.name || !formData.email || !formData.password || !formData.confirmPassword || !formData.agreeToTerms || formData.password !== formData.confirmPassword}
+              disabled={isLoading || !formData.name || !formData.email || !formData.password || !formData.confirmPassword || !formData.agreeToTerms || formData.password !== formData.confirmPassword || passwordValidation.length > 0}
               className="relative w-full bg-gradient-to-r from-white/20 via-white/10 to-transparent backdrop-blur-sm text-white py-4 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-0.5 hover:scale-[1.02] border border-white/30 hover:border-white/50 overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:scale-100"
             >
               <span className="relative z-10 flex items-center justify-center gap-3">
-                Create Account
-                <svg className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
+                {isLoading ? 'Criando...' : 'Create Account'}
+                {!isLoading && (
+                  <svg className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                )}
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
             </button>

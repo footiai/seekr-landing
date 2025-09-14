@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 interface InternalMenuProps {
   activeSection: string;
@@ -6,6 +7,7 @@ interface InternalMenuProps {
 }
 
 export default function InternalMenu({ activeSection, onSectionChange }: InternalMenuProps) {
+  const { logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
@@ -199,7 +201,7 @@ export default function InternalMenu({ activeSection, onSectionChange }: Interna
                             <div className="relative group/logout">
                               <div className="absolute -inset-1 bg-gradient-to-r from-red-500/20 via-red-400/20 to-red-500/20 rounded-lg opacity-0 group-hover/logout:opacity-50 blur transition-all duration-500"></div>
                               
-                              <button className="relative w-full flex items-center gap-3 p-3 rounded-lg text-gray-400 hover:text-red-400 transition-all duration-500 group/logoutbtn border border-transparent hover:border-red-500/20">
+                              <button onClick={logout} className="relative w-full flex items-center gap-3 p-3 rounded-lg text-gray-400 hover:text-red-400 transition-all duration-500 group/logoutbtn border border-transparent hover:border-red-500/20">
                                 <div className="absolute inset-0 bg-red-500/5 opacity-0 group-hover/logoutbtn:opacity-100 transition-all duration-500 rounded-lg"></div>
                                 
                                 <svg className="w-4 h-4 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">

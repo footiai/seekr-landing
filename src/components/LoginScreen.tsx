@@ -2,14 +2,15 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { useAuth } from '@/context/AuthContext';
 
 interface LoginScreenProps {
   onClose?: () => void;
   onShowRegister?: () => void;
-  onLogin?: () => void;
 }
 
-export default function LoginScreen({ onClose, onShowRegister, onLogin }: LoginScreenProps) {
+export default function LoginScreen({ onClose, onShowRegister }: LoginScreenProps) {
+  const { login, loginError, isLoading } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -28,7 +29,7 @@ export default function LoginScreen({ onClose, onShowRegister, onLogin }: LoginS
   };
 
   const handleLogin = () => {
-    onLogin?.();
+    login(formData.email, formData.password);
   };
 
   return (
@@ -179,6 +180,11 @@ export default function LoginScreen({ onClose, onShowRegister, onLogin }: LoginS
           <div className="absolute -top-1 -left-1 w-full h-full bg-gradient-to-br from-gray-700 to-transparent rounded-3xl opacity-10 blur-xl pointer-events-none"></div>
           
           <div className="space-y-6 relative z-10">
+            {loginError && (
+              <div className="bg-red-500/20 border border-red-500 text-red-300 text-sm rounded-lg p-3 text-center">
+                {loginError}
+              </div>
+            )}
             {/* Email Field */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -280,16 +286,19 @@ export default function LoginScreen({ onClose, onShowRegister, onLogin }: LoginS
             </div>
 
             {/* Login Button */}
-            <button 
+            <button
               type="button"
               onClick={handleLogin}
+              disabled={isLoading || !formData.email || !formData.password}
               className="relative w-full bg-gradient-to-r from-white/20 via-white/10 to-transparent backdrop-blur-sm text-white py-4 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-0.5 hover:scale-[1.02] border border-white/30 hover:border-white/50 overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:scale-100"
             >
               <span className="relative z-10 flex items-center justify-center gap-3">
-                Sign In
-                <svg className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
+                {isLoading ? 'Entrando...' : 'Sign In'}
+                {!isLoading && (
+                  <svg className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                )}
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
               <div className="absolute -inset-1 bg-gradient-to-r from-white/20 to-transparent rounded-xl blur opacity-0 group-hover:opacity-50 transition-all duration-500"></div>
